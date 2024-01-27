@@ -1,0 +1,47 @@
+#:kivy 1.0.9
+<Menu>:
+    id : Menu
+    orientation: 'horizontal'
+    spacing : 10
+    BoxLayout:
+        size_hint : (0.3,1)
+        orientation: 'vertical'
+
+        Label:
+            text : 'space'
+        Button:
+            text: "apply"
+            on_release : root.onApply()
+        Label:
+            text : 'space'
+    
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint : (0.7,1)
+        DisplayCanvas:
+            id : Display
+
+            
+            canvas.before:
+                Color:
+                    rgb:(1,1,1,1)
+        
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint : (1,0.2)
+            Button:
+                text: ' op1'
+                on_release : Display.button_set_state(1)
+
+            Button:
+                text: ' op2'
+                on_release : Display.button_set_state(2)
+
+            Button:
+                text: ' op3'
+                on_release : Display.button_set_state(3)
+
+
+
+
+
