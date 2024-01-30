@@ -11,13 +11,23 @@ from kivy.uix.boxlayout import BoxLayout
 import numpy as np
 from kivy.uix.widget import Widget
 from kivy.core.window import Window
+from kivy.uix.dropdown import DropDown
 
+
+
+class CustomDropdown(DropDown):
+    def __init__(self, **kwargs):
+        
+        super().__init__(**kwargs)
+        self.select('item1')
 
 
 class DisplayCanvas(BoxLayout):
     def __init__(self, **kwargs):
 
-        self.state = 1
+
+        self.elements = 1 # 1 - rectangle , 2 - traingle
+        self.state = 1 # 1 - add material 2 - remove material 3 - add heat sourcess 4 remove heat sources
         self.shape = (100,100)
         self.heatmap = np.zeros(self.shape)
         self.is_drawing = False 
@@ -42,7 +52,7 @@ class DisplayCanvas(BoxLayout):
         return super().on_touch_down(touch)
     
     def on_touch_up(self, touch):
-        if self.collide_point(*touch.pos):
+        if self.collide_point(*touch.pos) and self.is_drawing == True:
 
             self.is_drawing = False
             offset = np.array(touch.pos)-np.array(self.pos)

@@ -9,11 +9,47 @@
 
         Label:
             text : 'space'
-        Button:
-            text: "apply"
-            on_release : root.onApply()
+        
         Label:
             text : 'space'
+
+        AnchorLayout:
+            orientation: 'vertical'
+            size_hint_y : None
+            height : 250
+            __safe_id: [element_select.__self__]
+
+            Button:
+                id : drop_button
+                text: 'Elements : '
+                anchor_y : 'top'
+                height : 60
+                size_hint : (1,None)
+                on_release : element_select.open(drop_button)
+            CustomDropdown:
+                id : element_select
+                anchor_y : 'bottom'
+
+                on_select : 
+                    drop_button.text = args[1]
+                    Display.elements = 1 if args[1] == 'Rectangles' else 0
+
+                Button:
+                    text: 'Elements : Rectangles'
+                    size_hint_y : None
+                    height : 44
+                    on_release : element_select.select('Rectangles')
+                Button:
+                    text: 'Elements : Triangles'
+                    size_hint_y : None
+                    height : 44
+                    on_release : element_select.select('Triangles')
+            
+        Button:
+            size_y : 60
+            size_hint : (1,None)
+            text: "Run"
+            on_release : root.onApply()
     
     BoxLayout:
         orientation: 'vertical'
