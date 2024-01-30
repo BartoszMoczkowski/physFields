@@ -11,14 +11,14 @@ k1 = 237     #thermal conductivity of the left half of the object
 k2 = 150     #thermal conductivity of the right half of the object
 
 #no. of elements in a row/column + 1 (i.e if you want four elements in a row set s_x to 5)
-s_x = 4    #has to be even for a convenient split in half
-s_y = 6
+s_x = 16    #has to be even for a convenient split in half
+s_y = 16
 
 elem_width = object_width / s_x
 elem_height = object_height / s_y
 
 #dictionary to store boundary conditions: left field - boundary type, right field - value of temperature or heat flux
-boundary_conditions = {"upper" : ["Neumann", -5], "lower" : ["Neumann", -5], 
+boundary_conditions = {"upper" : ["Neumann", 0], "lower" : ["Neumann", 0], 
                        "left" : ["Dirichlet", 400], "right" : ["Dirichlet", 300]}
 
 #creates a list of all the nodes with their x, y coords and saves them to the specified matrix
@@ -42,17 +42,17 @@ def generate_elems(mat, type, node_mat):
             check = i % (2 * (s_x + 1))
             if check <= s_x:
                 if check != 0:
-                    mat.append(["Type 3", i + s_x, i + s_x + 1, i])
-                    mat.append(["Type 4", i + s_x, i, i - 1])
+                    mat.append([i + s_x, i + s_x + 1, i])
+                    mat.append([i + s_x, i, i - 1])
                 if check != s_x:
-                    mat.append(["Type 1", i + s_x + 1, i + s_x + 2, i])
-                    mat.append(["Type 2", i + s_x + 2, i + 1, i])
+                    mat.append([i + s_x + 1, i + s_x + 2, i])
+                    mat.append([i + s_x + 2, i + 1, i])
         
             else:
-                mat.append(["Type 3", i + s_x, i + s_x + 1, i])
-                mat.append(["Type 4", i + s_x, i, i - 1])
-                mat.append(["Type 1", i + s_x + 1, i + s_x + 2, i])
-                mat.append(["Type 2", i + s_x + 2, i + 1, i])
+                mat.append([i + s_x, i + s_x + 1, i])
+                mat.append([i + s_x, i, i - 1])
+                mat.append([i + s_x + 1, i + s_x + 2, i])
+                mat.append([i + s_x + 2, i + 1, i])
 
 #makes an iteration of the K matrix for the specific rectangular element
 def rect_mat_maker(node1, node2, node3, node4, K):
@@ -112,11 +112,18 @@ def boundary_check(bnd_str, F, K, n_mat_length):
     elif boundary_conditions[bnd_str][0] == "Neumann":
         for i in ran:
             F[i] = F[i] + boundary_conditions[bnd_str][1]
-    F[0] = (F[1] + F[s_x + 1]) / 2
-    F[s_x] = (F[2 * s_x + 1] + F[s_x - 1]) / 2
-    F[-s_x - 1] = (F[-s_x] + F[-2 * s_x - 2]) / 2
-    F[-1] = (F[-1] + F[-s_x + 1]) / 2
     return F, K
+
+def corner_tweak(F):
+    if boundary_conditions["upper"][1] == "Dirichlet" and boundary_conditions["left"] == "Dirichlet":
+        F[0] = (F[1] + F[s_x + 1]) / 2
+    if boundary_conditions["upper"][1] == "Dirichlet" and boundary_conditions["right"] == "Dirichlet":
+        F[s_x] = (F[2 * s_x + 1] + F[s_x - 1]) / 2
+    if boundary_conditions["lower"][1] == "Dirichlet" and boundary_conditions["left"] == "Dirichlet":
+        F[-s_x - 1] = (F[-s_x] + F[-2 * s_x - 2]) / 2
+    if boundary_conditions["lower"][1] == "Dirichlet" and boundary_conditions["right"] == "Dirichlet":
+        F[-1] = (F[-1] + F[-s_x + 1]) / 2
+    return F
 
 #executes all the functions in the required order and returns the temperature vector
 def main():
@@ -133,16 +140,16 @@ def main():
             K = rect_mat_maker(e[0], e[1], e[2], e[3], K)
     else:
         for e in elems:
-            K = tri_mat_maker(e[1], e[2], e[3], nodes, K)
+            K = tri_mat_maker(e[0], e[1], e[2], nodes, K)
 
     F = np.zeros(len(nodes))
 
     for i, row in enumerate(K):
         for j in range(len(row)):
-            j_mod = j % (s_x + 1)
-            if j_mod < (s_x / 2):
+            j_mod = i % (s_y + 1)
+            if j_mod < (s_y / 2):
                 K[i][j] = K[i][j] * k1
-            elif j_mod > (s_x / 2):
+            elif j_mod > (s_y / 2):
                 K[i][j] = K[i][j] * k2
             else:
                 K[i][j] = K[i][j] * (k1 + k2) / 2
@@ -153,7 +160,11 @@ def main():
     F, K = boundary_check("left", F, K, n_mat_length)
     F, K = boundary_check("right", F, K, n_mat_length)
 
+    F = corner_tweak(F)
+
     T = np.linalg.solve(K, F)
     return T
 
-print(main())
+T = main()
+plt.matshow(T.reshape(17, 17))
+plt.show()
