@@ -7,11 +7,64 @@
         size_hint : (0.3,1)
         orientation: 'vertical'
 
+
+        GridLayout:
+            cols : 1
+
+            Label:
+                text: "shape (width, height)"
+            GridLayout:
+                cols : 2
+                size_y : 30
+                IntInput:
+                    id : width_input
+                    text : "20"
+                IntInput:
+                    id : height_input
+                    text : "10"
+                    
+
         Label:
-            text : 'space'
-        
-        Label:
-            text : 'space'
+            text : "Layers"
+            height : 20
+        GridLayout:
+            height : 80
+            size_hint_y : None
+            cols : 2
+            Label:
+                text : 'Space'
+            CheckBox:
+                group : "edit_select"
+                on_active : Display.button_set_layer(0,self.active)
+            Label:
+                text : 'Material'
+            CheckBox:
+                group : "edit_select"
+                on_active : Display.button_set_layer(1,self.active)
+            
+            Label:
+                text : 'Temperature'
+            CheckBox:
+                group : "edit_select"
+                on_active : Display.button_set_layer(2,self.active)
+            Label:
+                text : 'Heat Flux'
+            CheckBox:
+                group : "edit_select"
+                on_active : Display.button_set_layer(3,self.active)
+
+
+        GridLayout:
+            cols : 1
+
+            Label:
+                text: "material / heat value"
+            GridLayout:
+                cols : 1
+                size_y : 30
+                FloatInput:
+                    id : value_input
+                    text : "1"
 
         AnchorLayout:
             orientation: 'vertical'
@@ -66,17 +119,12 @@
             orientation: 'horizontal'
             size_hint : (1,0.2)
             Button:
-                text: ' op1'
+                text: 'Add'
                 on_release : Display.button_set_state(1)
 
             Button:
-                text: ' op2'
+                text: 'Remove'
                 on_release : Display.button_set_state(2)
-
-            Button:
-                text: ' op3'
-                on_release : Display.button_set_state(3)
-
 
 
 
