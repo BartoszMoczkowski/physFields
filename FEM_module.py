@@ -10,18 +10,24 @@ class FemSolver():
     #geometry
     len_x          = 1
     len_y          = 1
-    n_element_x          = 20
-    n_element_y          = 10
+    n_element_x          = 10
+    n_element_y          = 20
     nodes_in_element      = 4
     
     def __init__(self):
-        self.update()
         self.material = np.ones((self.n_element_y,self.n_element_x))
 
         self.dirchlet_conditions = np.zeros((self.n_element_y,self.n_element_x))
 
         self.neumann_conditions = np.zeros((self.n_element_y,self.n_element_x))
 
+        self.space = np.ones((self.n_element_y,self.n_element_x))
+
+
+        #####
+        #self.space[30:60,40:70] = 0
+
+        self.update()
         self.dirchlet_conditions[0,:] = 10
         self.dirchlet_conditions[-1,:] = 100
 
@@ -36,26 +42,31 @@ class FemSolver():
 
 
     def update(self):
-        self.dx          = self.len_x/(self.n_element_x-1)
-        self.dy          = self.len_y/(self.n_element_y-1)
+        self.dx = self.len_x/(self.n_element_x-1)
+        self.dy = self.len_y/(self.n_element_y-1)
         
 
     
         
-        self.nex         = self.n_element_x-1
-        self.ney         = self.n_element_y-1
-        self.n_nodes        = self.n_element_x*self.n_element_y
-        self.n_elements         = self.nex*self.ney
-        self.global_coords      = np.zeros((self.n_nodes,2))
+        self.nex = self.n_element_x-1
+        self.ney = self.n_element_y-1
 
-        self.T           = np.zeros(self.n_nodes) #initial T, not strictly needed
+        #self.n_nodes = self.n_element_x*self.n_element_y
+        self.n_nodes = np.count_nonzero(self.space)
+        
+        self.element_space = self.space[:-1,:-1]*self.space[1:,:-1]*self.space[:-1,1:]*self.space[1:,1:]
+        
+        #self.n_elements = self.nex*self.ney
+        self.n_elements = np.count_nonzero(self.element_space)
+        self.global_coords = np.zeros((self.n_nodes,2))
+
+        self.T = np.zeros(self.n_nodes) #initial T, not strictly needed
 
 
         
     def solve(self):
         
         
-        self.update()
 
         if self.material.shape != (self.n_element_y,self.n_element_x):
             self.material = np.ones((self.n_element_y,self.n_element_x))
@@ -63,24 +74,46 @@ class FemSolver():
             self.dirchlet_conditions = np.zeros((self.n_element_y,self.n_element_x))
 
             self.neumann_conditions = np.zeros((self.n_element_y,self.n_element_x))
+            self.space = np.ones((self.n_element_y,self.n_element_x))
+
+        self.update()
+        
 
         #Setting global coordinates
+        coords_to_nodes = np.zeros((self.n_element_y,self.n_element_x))
         id = 0
         for i in range(0,self.n_element_y):
             for j in range(0,self.n_element_x):
+                #EDIT
+                if self.space[i,j] == 0:
+                    continue
                 self.global_coords[id,0] = -self.len_x/2 + j*self.dx
                 self.global_coords[id,1] = -self.len_y/2 + i*self.dy
+                #Edit
+                coords_to_nodes[i,j] = id
                 id          = id + 1
 
         # FEM connectivity
         # stores the node numbers belonging to each element
         elements_to_nodes   = np.zeros((self.n_elements,self.nodes_in_element), dtype=int)
 
-        for i_element in range(0,self.n_elements):
-            row        = i_element//self.nex   
-            ind        = i_element + row
-            elements_to_nodes[i_element,:] = [ind, ind+1, ind+self.n_element_x+1, ind+self.n_element_x]
-            
+        id_element = 0
+        #for element in self.element_space.flatten():
+        for i in range(0,self.ney):
+            for j in range(0,self.nex):
+                if self.element_space[i,j] == 0:
+                    continue
+                    #row        = i_element//self.nex   
+                    #ind        = i_element + row
+
+                node_1 = coords_to_nodes[i,j]
+                node_2 = coords_to_nodes[i,j+1]
+                node_3 = coords_to_nodes[i+1,j+1]
+                node_4 = coords_to_nodes[i+1,j]
+
+                #elements_to_nodes[id_element,:] = [ind, ind+1, ind+self.n_element_x+1, ind+self.n_element_x]
+                elements_to_nodes[id_element,:] = [node_1,node_2,node_3,node_4]
+                id_element += 1
         # Gauss integration points
         n_integration_points   = 4
         gauss = np.array([[ -np.sqrt(1/3), np.sqrt(1/3), np.sqrt(1/3), -np.sqrt(1/3)], [-np.sqrt(1/3), -np.sqrt(1/3), np.sqrt(1/3), np.sqrt(1/3)]]).T.copy()
@@ -147,7 +180,8 @@ class FemSolver():
         #Dirchlet Conditions
 
         ind_dc_2d = np.where(self.dirchlet_conditions !=0)
-        ind_dc = ind_dc_2d[1] + ind_dc_2d[0]*self.n_element_x
+        #ind_dc = ind_dc_2d[1] + ind_dc_2d[0]*self.n_element_x
+        ind_dc = coords_to_nodes[ind_dc_2d].astype(int)
         val_dc = np.array([self.dirchlet_conditions[ind_dc_2d[0][i],ind_dc_2d[1][i]] for i in range(len(ind_dc_2d[0]))])
 
         Free    = np.arange(0,self.n_nodes)
@@ -156,13 +190,26 @@ class FemSolver():
         tmp_dc     = A_all[:,ind_dc]
         Rhs_all = Rhs_all - tmp_dc.dot(val_dc)
 
-        Rhs_all +=  self.neumann_conditions.flatten()
+        #Edit   
+        non_zero = np.where(self.space.flatten()!= 0)
+        Rhs_all +=  self.neumann_conditions.flatten()[non_zero]
 
         # solve reduced system
         self.T[Free] = spsolve(A_all[np.ix_(Free, Free)],Rhs_all[Free])
         self.T[ind_dc] = val_dc
 
-        return self.T.reshape((self.n_element_y,self.n_element_x))
+
+        T_reshaped = np.zeros((self.n_element_y,self.n_element_x))
+        id = 0
+        for i in range(0,self.n_element_y):
+            for j in range(0,self.n_element_x):
+                if self.space[i,j] == 0:
+                    continue
+                T_reshaped[i,j] = self.T[id]
+                id += 1
+
+        #return self.T.reshape((self.n_element_y,self.n_element_x))
+        return T_reshaped
 
 
 if __name__ == "__main__":

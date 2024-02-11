@@ -165,7 +165,8 @@ class DisplayCanvas(BoxLayout):
             editing_value = 0
 
         if self.layer_select == 0:
-            pass
+            editing_value = 1 if editing_value != 0 else 0
+            self.fem.space[x_0:x_n+1,y_0:y_n+1] = editing_value
         if self.layer_select == 1:
             self.fem.material[x_0:x_n+1,y_0:y_n+1] = editing_value
         if self.layer_select == 2:
@@ -182,13 +183,14 @@ class DisplayCanvas(BoxLayout):
         rect_h = int(Rect.height)
         texture_shape = self.shape
         texture = Texture.create(size=texture_shape)
+        texture.mag_filter = "nearest"
 
 
         buf_source = self.heatmap
 
         if self.layer_selected:
             if self.layer_select == 0:
-                pass
+                buf_source = self.fem.space
             if self.layer_select == 1:
                 buf_source = self.fem.material
             if self.layer_select == 2:
