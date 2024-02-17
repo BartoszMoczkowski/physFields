@@ -12,16 +12,30 @@
             cols : 1
 
             Label:
-                text: "shape (width, height)"
+                text: "grid shape (width, height)"
             GridLayout:
+                size_hint_y : None
+                height : 30
                 cols : 2
-                size_y : 30
                 IntInput:
                     id : width_input
                     text : "20"
                 IntInput:
                     id : height_input
                     text : "20"
+
+            Label:
+                text: "side length (width, height)"
+            GridLayout:
+                size_hint_y : None
+                height : 30
+                cols : 2
+                FloatInput:
+                    id : len_x_input
+                    text : "1"
+                FloatInput:
+                    id : len_y_input
+                    text : "1"
                     
 
         Label:
@@ -59,49 +73,49 @@
             height : 120
             size_hint_y : None
             Label:
-                text: "material / heat edit value"
+                text: "edit value"
            
             FloatInput:
                 id : value_input
                 text : "1"
 
             Label:
-                text: "material / heat value"
+                text: "hover value"
             Label:
                 id : material_display
                 text: "0"
 
-        AnchorLayout:
-            orientation: 'vertical'
-            size_hint_y : None
-            height : 200
-            __safe_id: [element_select.__self__]
+        # AnchorLayout:
+        #     orientation: 'vertical'
+        #     size_hint_y : None
+        #     height : 200
+        #     __safe_id: [element_select.__self__]
 
-            Button:
-                id : drop_button
-                text: 'Elements : '
-                anchor_y : 'top'
-                height : 40
-                size_hint : (1,None)
-                on_release : element_select.open(drop_button)
-            CustomDropdown:
-                id : element_select
-                anchor_y : 'bottom'
+        #     Button:
+        #         id : drop_button
+        #         text: 'Elements : '
+        #         anchor_y : 'top'
+        #         height : 40
+        #         size_hint : (1,None)
+        #         on_release : element_select.open(drop_button)
+        #     CustomDropdown:
+        #         id : element_select
+        #         anchor_y : 'bottom'
 
-                on_select : 
-                    drop_button.text = args[1]
-                    Display.elements = 1 if args[1] == 'Rectangles' else 0
+        #         on_select : 
+        #             drop_button.text = args[1]
+        #             Display.elements = 1 if args[1] == 'Rectangles' else 0
 
-                Button:
-                    text: 'Elements : Rectangles'
-                    size_hint_y : None
-                    height : 34
-                    on_release : element_select.select('Rectangles')
-                Button:
-                    text: 'Elements : Triangles'
-                    size_hint_y : None
-                    height : 34
-                    on_release : element_select.select('Triangles')
+        #         Button:
+        #             text: 'Elements : Rectangles'
+        #             size_hint_y : None
+        #             height : 34
+        #             on_release : element_select.select('Rectangles')
+        #         Button:
+        #             text: 'Elements : Triangles'
+        #             size_hint_y : None
+        #             height : 34
+        #             on_release : element_select.select('Triangles')
             
         Button:
             height : 60
@@ -110,7 +124,7 @@
             on_release : root.onApply()
         
         Button:
-            height : 20
+            height : 30
             size_hint : (1,None)
             text: "Save heatmap"
             on_release : Display.save_heatmap()
@@ -131,10 +145,13 @@
             size_hint : (1,0.2)
             Button:
                 text: 'Edit'
+                id : edit_button
                 on_release : Display.button_set_state(1)
+                background_color : 0.2,1,0.3
 
             Button:
                 text: 'Clear'
+                id : clear_button
                 on_release : Display.button_set_state(2)
 
 

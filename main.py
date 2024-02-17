@@ -1,18 +1,18 @@
 import kivy
-kivy.require('2.1.0')
-
-#biblioteki to kivy i numpy
+kivy.require('2.3.0')
 
 from kivy.app import App
 from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
 from kivy.graphics import Rectangle,Color
 from kivy.uix.boxlayout import BoxLayout
-import numpy as np
 from kivy.uix.widget import Widget
 from kivy.core.window import Window
 from kivy.uix.dropdown import DropDown
 from kivy.uix.textinput import TextInput
+
+
+import numpy as np
 import matplotlib.colors as cl
 from FEM_module import FemSolver
 
@@ -49,8 +49,8 @@ class DisplayCanvas(BoxLayout):
     def __init__(self, **kwargs):
 
         self.fem = FemSolver()
-        self.fem.n_element_x = 20
-        self.fem.n_element_y = 20
+        self.fem.n_node_x = 20
+        self.fem.n_node_y = 20
 
         self.fem.dirchlet_conditions[0, :] = 10
         self.fem.dirchlet_conditions[-1,:] = 100
@@ -60,7 +60,7 @@ class DisplayCanvas(BoxLayout):
         self.layer_select = 0 #0 - nodes 1 - material 2 - heat source
         self.layer_selected = False # 
 
-        self.shape = (self.fem.n_element_y,self.fem.n_element_x)
+        self.shape = (self.fem.n_node_y,self.fem.n_node_x)
         self.heatmap = np.ones(self.shape)
         
         
@@ -164,11 +164,14 @@ class DisplayCanvas(BoxLayout):
             except:
                 editing_value = 0
         elif self.editing_state == 2:
-            editing_value = 0
+            if self.layer_select != 1:
+                editing_value = 0
+            else :
+                editing_value = 1
 
         if self.layer_select == 0:
             editing_value = 1 if editing_value != 0 else 0
-            self.fem.space[x_0:x_n+1,y_0:y_n+1] = editing_value
+            self.fem.node_space[x_0:x_n+1,y_0:y_n+1] = editing_value
         if self.layer_select == 1:
             self.fem.material[x_0:x_n+1,y_0:y_n+1] = editing_value
         if self.layer_select == 2:
@@ -192,7 +195,7 @@ class DisplayCanvas(BoxLayout):
 
         if self.layer_selected:
             if self.layer_select == 0:
-                buf_source = self.fem.space
+                buf_source = self.fem.node_space
             if self.layer_select == 1:
                 buf_source = self.fem.material
             if self.layer_select == 2:
@@ -230,7 +233,7 @@ class DisplayCanvas(BoxLayout):
 
         if self.layer_selected:
             if self.layer_select == 0:
-                value_source = self.fem.space
+                value_source = self.fem.node_space
             if self.layer_select == 1:
                 value_source = self.fem.material
             if self.layer_select == 2:
@@ -258,9 +261,21 @@ class DisplayCanvas(BoxLayout):
 
 
     def solve(self):
-        self.fem.n_element_x = int(self.get_ids().width_input.text)
-        self.fem.n_element_y = int(self.get_ids().height_input.text)
-        self.shape = (self.fem.n_element_x,self.fem.n_element_y)
+        self.fem.n_node_x = int(self.get_ids().width_input.text)
+        self.fem.n_node_y = int(self.get_ids().height_input.text)
+
+
+        try: 
+            len_x_unchecked = float(self.get_ids().len_x_input.text)
+            len_y_unchecked = float(self.get_ids().len_y_input.text)
+        except:
+            len_x_unchecked = 1
+            len_y_unchecked = 1
+
+        self.fem.len_x = len_x_unchecked if len_x_unchecked > 0 else 1 
+        self.fem.len_y = len_y_unchecked if len_y_unchecked > 0 else 1 
+
+        self.shape = (self.fem.n_node_x,self.fem.n_node_y)
         self.heatmap = np.ones(self.shape)
         self.heatmap = self.fem.solve()
         self.heatmap = self.heatmap
@@ -269,6 +284,13 @@ class DisplayCanvas(BoxLayout):
 
     def button_set_state(self,state):
         self.editing_state = state
+        if state == 1:
+        
+            self.get_ids().edit_button.background_color = (0.2,1,0.3)
+            self.get_ids().clear_button.background_color = (1,1,1)
+        else: 
+            self.get_ids().edit_button.background_color = (1,1,1)
+            self.get_ids().clear_button.background_color = (1,0.1,0.2)
 
     def button_set_layer(self,layer,active):
         self.layer_selected = active
@@ -306,4 +328,5 @@ class MyApp(App):
 
 
 if __name__ == '__main__':
+
     MyApp().run()
