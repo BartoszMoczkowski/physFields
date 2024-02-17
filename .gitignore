@@ -2,3 +2,5 @@ text.ipynb
 2d_fem_steady_state.py
 __pycache__/shapes.cpython-312.pyc
 __pycache__
+coords.csv
+heatmap.csv

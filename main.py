@@ -50,7 +50,7 @@ class DisplayCanvas(BoxLayout):
 
         self.fem = FemSolver()
         self.fem.n_element_x = 20
-        self.fem.n_element_y = 10
+        self.fem.n_element_y = 20
 
         self.fem.dirchlet_conditions[0, :] = 10
         self.fem.dirchlet_conditions[-1,:] = 100
@@ -109,6 +109,8 @@ class DisplayCanvas(BoxLayout):
         return super().on_touch_up(touch)
     
     def on_motion(self, etype, me,x):
+
+        self.set_layer_display_value(x.pos,x.spos)
         if self.is_drawing and not self.collide_point(*x.pos):
             self.update_display()
             return
@@ -212,6 +214,49 @@ class DisplayCanvas(BoxLayout):
         with Rect.canvas:
             Rectangle(texture=texture, pos=Rect.pos, size=(rect_w, rect_h))
 
+    def set_layer_display_value(self, pos,spos):
+       
+        x,y = spos
+        x = x * self.get_root_app().root.width
+        y = y * self.get_root_app().root.height
+        x,y = np.array([x,y]) - np.array(self.pos)
+        offset_w = x/self.width
+        offset_h = y/self.height
+
+        
+        i = int(offset_w * self.shape[0])
+        j = int(offset_h * self.shape[1]) 
+      
+
+        if self.layer_selected:
+            if self.layer_select == 0:
+                value_source = self.fem.space
+            if self.layer_select == 1:
+                value_source = self.fem.material
+            if self.layer_select == 2:
+                value_source = self.fem.dirchlet_conditions
+            if self.layer_select == 3:
+                value_source = self.fem.neumann_conditions
+        else:
+            value_source = self.heatmap
+        
+
+        if not (i >= 0 and i < value_source.shape[1] and j >= 0 and j < value_source.shape[0]):
+            return
+
+        value = value_source[j,i] 
+
+        label = self.get_ids().material_display
+
+        label.text = f"{value:.2f}"
+        
+    def save_heatmap(self):
+
+        print("saving")
+        np.savetxt("heatmap.csv",self.heatmap,fmt="%.3e")
+        np.savetxt("coords.csv",self.fem.global_coords,fmt="%.3e")
+
+
     def solve(self):
         self.fem.n_element_x = int(self.get_ids().width_input.text)
         self.fem.n_element_y = int(self.get_ids().height_input.text)
@@ -241,7 +286,7 @@ class Menu(BoxLayout):
     def on_resize(self,*args):
         self.ids.Display.update_display()
 
-    
+        
 
     def onApply(self):
         Rect = self.ids.Display

@@ -10,7 +10,7 @@ class FemSolver():
     #geometry
     len_x          = 1
     len_y          = 1
-    n_element_x          = 10
+    n_element_x          = 20
     n_element_y          = 20
     nodes_in_element      = 4
     
@@ -89,6 +89,7 @@ class FemSolver():
                     continue
                 self.global_coords[id,0] = -self.len_x/2 + j*self.dx
                 self.global_coords[id,1] = -self.len_y/2 + i*self.dy
+
                 #Edit
                 coords_to_nodes[i,j] = id
                 id          = id + 1

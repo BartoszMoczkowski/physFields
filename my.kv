@@ -21,7 +21,7 @@
                     text : "20"
                 IntInput:
                     id : height_input
-                    text : "10"
+                    text : "20"
                     
 
         Label:
@@ -56,27 +56,32 @@
 
         GridLayout:
             cols : 1
+            height : 120
+            size_hint_y : None
+            Label:
+                text: "material / heat edit value"
+           
+            FloatInput:
+                id : value_input
+                text : "1"
 
             Label:
                 text: "material / heat value"
-            GridLayout:
-                cols : 1
-                size_y : 30
-                FloatInput:
-                    id : value_input
-                    text : "1"
+            Label:
+                id : material_display
+                text: "0"
 
         AnchorLayout:
             orientation: 'vertical'
             size_hint_y : None
-            height : 250
+            height : 200
             __safe_id: [element_select.__self__]
 
             Button:
                 id : drop_button
                 text: 'Elements : '
                 anchor_y : 'top'
-                height : 60
+                height : 40
                 size_hint : (1,None)
                 on_release : element_select.open(drop_button)
             CustomDropdown:
@@ -90,20 +95,26 @@
                 Button:
                     text: 'Elements : Rectangles'
                     size_hint_y : None
-                    height : 44
+                    height : 34
                     on_release : element_select.select('Rectangles')
                 Button:
                     text: 'Elements : Triangles'
                     size_hint_y : None
-                    height : 44
+                    height : 34
                     on_release : element_select.select('Triangles')
             
         Button:
-            size_y : 60
+            height : 60
             size_hint : (1,None)
             text: "Run"
             on_release : root.onApply()
-    
+        
+        Button:
+            height : 20
+            size_hint : (1,None)
+            text: "Save heatmap"
+            on_release : Display.save_heatmap()
+        
     BoxLayout:
         orientation: 'vertical'
         size_hint : (0.7,1)
@@ -119,11 +130,11 @@
             orientation: 'horizontal'
             size_hint : (1,0.2)
             Button:
-                text: 'Add'
+                text: 'Edit'
                 on_release : Display.button_set_state(1)
 
             Button:
-                text: 'Remove'
+                text: 'Clear'
                 on_release : Display.button_set_state(2)
 
 
